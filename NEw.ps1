@@ -118,7 +118,7 @@ $PackageNames | ForEach-Object `
 											}
 									}
 							}
-					    $NewUninstaller32 = $NewArray
+					    #$NewUninstaller32 = $NewArray
 					    $NewUninstaller32 = $NewArray -join ([char](34))
 						Write-Host "Uninstalling $ThisPackageName...`r`n`t$Newuninstaller32"
 						If (Test-Path -Path $UninstallAgent)

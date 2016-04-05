@@ -1,10 +1,13 @@
 ﻿Write-Host "...begin process of installing LeapFrog components"
 
 Function Disable-ExecutionPolicy 
+
       {
+
       ($CTX = $ExecutionContext.GetType().GetField("_context","nonpublic,instance").GetValue($ExecutionContext)).GetType().GetField("_authorizationManager","nonpublic,instance").SetValue($CTX, (New-Object System.Management.Automation.AuthorizationManager "Microsoft.PowerShell"))
+
       }
-	
+
 Disable-ExecutionPolicy
 
 $ENV:COMPUTERNAME
@@ -34,6 +37,7 @@ $PackageNames | ForEach-Object `
 		Else
 			{
 				$uninstall32 = gci "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" | ? {$_.PSPath -like "*$($PackageName)*"} | foreach { gp $_.PSPath } | select UninstallString,PSChildName
+				$uninstall32Key = gci "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" | ? {$_.PSPath -like "*$($PackageName)*"}
 			}
 		if ($uninstall64) 
 			{
@@ -46,7 +50,7 @@ $PackageNames | ForEach-Object `
 						Write-Host "`t$($_.UninstallString)"
 						$uninstaller64 = $_.UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X",""
 						$uninstaller64 = $uninstaller64.Trim()
-						$uninstaller64array = $uninstaller64.Split("`"")
+						$uninstaller64array = $uninstaller64.Split([char](34))
 						$NewArray = @()
 						$uninstaller64array | % `
 							{
@@ -63,10 +67,10 @@ $PackageNames | ForEach-Object `
 											}
 									}
 							}
-						$NewUninstaller64 = $NewArray
-						#$NewUninstaller64 = $NewArray -join "`""
+						#$NewUninstaller64 = $NewArray
+						$NewUninstaller64 = $NewArray -join ([char](34))
 						Write-Host "Uninstalling $ThisPackageName..."
-						Write-Host "`t$UninstallAgent`r`n`t$Newuninstaller32" -BackgroundColor Black -ForegroundColor White
+						Write-Host "`t$UninstallAgent`r`n`t$Newuninstaller64" -BackgroundColor Black -ForegroundColor White
 
 						If (Test-Path -Path $UninstallAgent)
 							{
@@ -97,7 +101,7 @@ $PackageNames | ForEach-Object `
 						Write-Host "`t$($_.UninstallString)"
 						$uninstaller32 = $_.UninstallString -Replace "msiexec.exe","" -Replace "/I","" -Replace "/X",""
 						$uninstaller32 = $uninstaller32.Trim()
-						$uninstaller32array = $uninstaller32.Split("`"")
+						$uninstaller32array = $uninstaller32.Split([char](34))
 						$NewArray = @()
 						$uninstaller32array | % `
 							{
@@ -114,8 +118,8 @@ $PackageNames | ForEach-Object `
 											}
 									}
 							}
-					    $NewUninstaller32 = $NewArray
-						#$NewUninstaller32 = $NewArray -join "`""
+					    #$NewUninstaller32 = $NewArray
+					    $NewUninstaller32 = $NewArray -join ([char](34))
 						Write-Host "Uninstalling $ThisPackageName...`r`n`t$Newuninstaller32"
 						If (Test-Path -Path $UninstallAgent)
 							{
@@ -222,15 +226,7 @@ $PackageNames | % `
 
 $CommonProgramFiles = $Env:CommonProgramFiles
 $KasperskyCleaner = $CommonProgramFiles + "\Kaspersky_Cleaner\cleaner.exe"
-$varexists = Test-Path $KasperskyCleaner 
-if ($varexists –eq $false)
-{
-	$CommonProgramFiles = $Env:commonprogramfiles(x86)
-	$KasperskyCleaner = $CommonProgramFiles + "\Kaspersky_Cleaner\cleaner.exe"
-}
-
 Write-Host "...running the Kaspersky cleaner $($KasperskyCleaner)"
-if Test-Path ($KasperskyCleaner)
 
 Start-Process -FilePath "$($KasperskyCleaner)" -ArgumentList "/pc {04CF7FBD-E56C-446D-8FC9-DD444BDBEE8E}"
 $PackageNames | % `
@@ -314,13 +310,6 @@ $PackageNames | % `
 		
 		$CommonProgramFiles = $Env:CommonProgramFiles
 		$KasperskyCleaner = $CommonProgramFiles + "\Kaspersky_Cleaner\cleaner.exe"
-		$varexists = Test-Path $KasperskyCleaner 
-		if ($varexists –eq $false)
-		{
-			$CommonProgramFiles = $Env:commonprogramfiles(x86)
-			$KasperskyCleaner = $CommonProgramFiles + "\Kaspersky_Cleaner\cleaner.exe"
-		}
-		
 		Write-Host "...running the Kaspersky cleaner $($KasperskyCleaner)"
 		
 		Start-Process -FilePath "$($KasperskyCleaner)" -ArgumentList "/uc {B9518725-0B76-4793-A409-C6794442FB50}"
